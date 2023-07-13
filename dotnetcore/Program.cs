@@ -1,13 +1,27 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
-    options.ConnectionString = "InstrumentationKey=36c1bfa5-e9fa-4ddb-81e4-3e2757b3d29e;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/";
-});
+ConfigureOpenTelemetry(builder);
+
+void ConfigureOpenTelemetry(WebApplicationBuilder builder)
+{
+    AppContext.SetSwitch("Azure.Experimental.EnableActivitySource", true);
+    builder.Services
+        .AddOpenTelemetry()
+        .UseAzureMonitor();
+
+    builder.Host.UseSerilog((context, _, config) => config
+    .ReadFrom.Configuration(context.Configuration)
+    .Enrick.FromLogContext()
+    .WriteTo.ApplicationInsights(context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"],
+        TelemetryConverter.Traces));
+
+}
 
 var app = builder.Build();
 
