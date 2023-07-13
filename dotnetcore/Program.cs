@@ -17,7 +17,7 @@ void ConfigureOpenTelemetry(WebApplicationBuilder builder)
 
     builder.Host.UseSerilog((context, _, config) => config
     .ReadFrom.Configuration(context.Configuration)
-    .Enrick.FromLogContext()
+    .Enrich.FromLogContext()
     .WriteTo.ApplicationInsights(context.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"],
         TelemetryConverter.Traces));
 
